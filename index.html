@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>일본어 회화 동화로 표현하기 프로젝트(수행평가)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,8 +30,11 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // ⚠️ 선생님의 구글 앱스 스크립트 웹 앱 URL을 여기에 붙여넣으세요!
+        // ⚠️ 구글 앱스 스크립트 웹 앱 URL 입력
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx8tQkPlLMm1_j95Yy_ig5_-YGpBQb13heM72OV598mAVgVOUKHOfWQI70p68u6_Y0oKw/exec";
+
+        // 🏫 드롭다운에 표시될 반 목록 (필요시 수정 가능)
+        const CLASS_OPTIONS = ['1반', '2반', '3반', '4반', '5반', '6반', '7반', '8반', '9반', '10반'];
 
         // ==========================================
         // 📚 학습 데이터
@@ -62,7 +65,7 @@
             { ko: "가위", jp: "はさみ [하사미]" },
             { ko: "오린 것", jp: "きりぬき [키리누키]" },
             { ko: "그림책", jp: "えほん [에홍]" },
-            { ko: "물", jp: "みず [미즈]" },
+            { ko: "물", jp: "みず [みず]" },
             { ko: "강", jp: "かわ(川) [카와]" },
             { ko: "댐", jp: "ダム [다무]" },
             { ko: "전기", jp: "でんき [뎅키]" },
@@ -117,7 +120,7 @@
                     
                     {isLoading && (
                         <div className="mb-6 bg-amber-50 text-amber-700 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
-                            <i className="fa-solid fa-spinner animate-spin"></i> 최신 서버 데이터를 동기화하는 중...
+                            <i className="fa-solid fa-spinner animate-spin"></i> 데이터를 동기화 중입니다...
                         </div>
                     )}
 
@@ -190,7 +193,7 @@
         }
 
         // ==========================================
-        // ✍️ 학생 제출 화면 (반 선택 드롭다운 적용)
+        // ✍️ 학생 제출 화면 (반 선택 드롭다운 정제)
         // ==========================================
         function StudentSubmitScreen({ setScreen, refreshData }) {
             const [studentClass, setStudentClass] = useState('');
@@ -198,9 +201,6 @@
             const [studentName, setStudentName] = useState('');
             const [sentences, setSentences] = useState([{ ko: '' }, { ko: '' }, { ko: '' }, { ko: '' }]);
             const [isSubmitting, setIsSubmitting] = useState(false);
-
-            // 반 선택 옵션 배열
-            const classList = ['1반', '2반', '3반', '4반', '5반', '6반', '7반', '8반'];
 
             const handleSentenceChange = (index, value) => {
                 const newSentences = [...sentences];
@@ -223,12 +223,17 @@
                 setIsSubmitting(true);
                 const payload = {
                     action: 'submitStory',
-                    data: { studentClass, studentId, studentName, sentences }
+                    data: { 
+                        studentClass: studentClass.trim(), 
+                        studentId: studentId.trim(), 
+                        studentName: studentName.trim(), 
+                        sentences 
+                    }
                 };
 
                 try {
-                    if (GAS_URL.includes("여기에")) {
-                        alert("[테스트 안내] 구글 앱스 스크립트 URL이 설정되지 않았습니다. 코드 상단 GAS_URL을 설정해 주세요.");
+                    if (GAS_URL.includes("YOUR_GOOGLE")) {
+                        alert("구글 앱스 스크립트 URL(GAS_URL)이 설정되어 있지 않습니다.");
                     } else {
                         await fetch(GAS_URL, {
                             method: 'POST',
@@ -236,12 +241,12 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         });
-                        alert("성공적으로 선생님께 제출되었습니다!");
+                        alert("선생님께 정상적으로 제출되었습니다!");
                     }
                     refreshData();
                     setScreen('home');
                 } catch (err) {
-                    alert("전송 중 오류가 발생했습니다: " + err.message);
+                    alert("제출 중 오류가 발생했습니다: " + err.message);
                 } finally {
                     setIsSubmitting(false);
                 }
@@ -251,7 +256,6 @@
                 <div className="flex flex-col py-4 max-w-xl mx-auto w-full">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">나의 동화책 제출하기</h2>
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                        {/* 반(드롭다운), 학번, 이름 입력 필드 */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                                 <label className="block text-xs font-bold text-gray-600 mb-1">일본어 반</label>
@@ -261,7 +265,7 @@
                                     className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-bold"
                                 >
                                     <option value="">반 선택</option>
-                                    {classList.map(c => <option key={c} value={c}>{c}</option>)}
+                                    {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
                             </div>
                             <div>
@@ -286,7 +290,6 @@
                             </div>
                         </div>
 
-                        {/* 동화책 문장 작성 영역 */}
                         <div className="flex flex-col gap-3">
                             <p className="text-sm font-bold text-gray-600"><i className="fa-solid fa-pen-nib mr-1"></i> 창작 동화책 문장 (한국어 4개)</p>
                             {sentences.map((s, idx) => (
@@ -325,7 +328,8 @@
             const handleSearch = (e) => {
                 e.preventDefault();
                 setSearched(true);
-                const foundKey = Object.keys(testScores).find(key => key.includes(searchName.trim()));
+                const query = searchName.trim();
+                const foundKey = Object.keys(testScores).find(key => key.includes(query));
                 setResult(foundKey ? { name: foundKey, ...testScores[foundKey] } : null);
             };
 
@@ -340,7 +344,7 @@
                             value={searchName} 
                             onChange={(e) => setSearchName(e.target.value)}
                             placeholder="이름 입력 (예: 홍길동)"
-                            className="border-2 border-indigo-200 rounded-xl p-3 outline-none focus:border-indigo-500"
+                            className="border-2 border-indigo-200 rounded-xl p-3 outline-none focus:border-indigo-500 font-bold text-center"
                         />
                         <button type="submit" className="bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition">결과 조회</button>
                     </form>
@@ -353,7 +357,7 @@
                                     <div className="text-5xl font-black text-indigo-600 my-4">{result.score} 점</div>
                                 </>
                             ) : (
-                                <p className="text-red-500 font-bold">결과가 없거나 아직 채점 전입니다.</p>
+                                <p className="text-red-500 font-bold">해당 이름의 채점 결과가 없습니다.</p>
                             )}
                         </div>
                     )}
@@ -362,14 +366,14 @@
         }
 
         // ==========================================
-        // 🔒 교사 모드 화면들
+        // 🔒 교사 모드 화면
         // ==========================================
         function TeacherLoginScreen({ setScreen }) {
             const [password, setPassword] = useState('');
             const handleLogin = (e) => {
                 e.preventDefault();
                 if (password === '1207') setScreen('test-setup');
-                else alert('비밀번호가 틀렸습니다.');
+                else alert('비밀번호가 일치하지 않습니다.');
             };
 
             return (
@@ -409,7 +413,7 @@
                     <div className="bg-white rounded-xl border divide-y">
                         {studentsList.length > 0 ? studentsList.map((st, i) => (
                             <div key={i} className="p-4 flex justify-between items-center">
-                                <span className="font-bold">{st.name}</span>
+                                <span className="font-bold text-gray-800">{st.name}</span>
                                 <button onClick={() => startTest(st)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold">평가 시작</button>
                             </div>
                         )) : (
@@ -420,7 +424,7 @@
             );
         }
 
-        function TestRunScreen({ setScreen, testQuestions, studentName, setTestScores, refreshData }) {
+        function TestRunScreen({ setScreen, testQuestions, studentName, refreshData }) {
             const [idx, setIdx] = useState(0);
             const [score, setScore] = useState(0);
 
@@ -436,7 +440,7 @@
                         data: { studentName, score: nextScore, details: testQuestions }
                     };
                     
-                    if (!GAS_URL.includes("여기에")) {
+                    if (!GAS_URL.includes("YOUR_GOOGLE")) {
                         fetch(GAS_URL, {
                             method: 'POST',
                             mode: 'no-cors',
@@ -444,7 +448,7 @@
                             body: JSON.stringify(payload)
                         });
                     }
-                    alert(`채점 완료! 총점: ${nextScore}점`);
+                    alert(`채점 완료! 최종 점수: ${nextScore}점`);
                     refreshData();
                     setScreen('home');
                 }
@@ -455,8 +459,8 @@
             return (
                 <div className="max-w-xl mx-auto py-6 text-center">
                     <h3 className="text-xl font-bold mb-4">{studentName} ({idx + 1} / {testQuestions.length})</h3>
-                    <div className="bg-white p-8 rounded-2xl border-2 mb-6">
-                        <span className="text-xs bg-indigo-100 text-indigo-700 font-bold px-2 py-1 rounded">{current.type}</span>
+                    <div className="bg-white p-8 rounded-2xl border-2 mb-6 shadow-sm">
+                        <span className="text-xs bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-md">{current.type}</span>
                         <p className="text-2xl font-bold my-6">{current.ko}</p>
                         {current.jp && <p className="text-indigo-600 font-bold text-lg">{current.jp}</p>}
                     </div>
@@ -469,7 +473,7 @@
         }
 
         // ==========================================
-        // App 통합 컴포넌트
+        // App 컴포넌트
         // ==========================================
         function App() {
             const [screen, setScreen] = useState('home');
@@ -480,7 +484,7 @@
             const [testQuestions, setTestQuestions] = useState([]);
 
             const refreshData = async () => {
-                if (GAS_URL.includes("여기에")) return;
+                if (GAS_URL.includes("YOUR_GOOGLE")) return;
                 setIsLoading(true);
                 try {
                     const res = await fetch(`${GAS_URL}?action=getData`);
@@ -506,7 +510,7 @@
                     case 'student-result': return <StudentResultScreen setScreen={setScreen} testScores={testScores} />;
                     case 'teacher-login': return <TeacherLoginScreen setScreen={setScreen} />;
                     case 'test-setup': return <TestSetupScreen setScreen={setScreen} setSelectedStudent={setSelectedStudent} setTestQuestions={setTestQuestions} studentData={studentData} />;
-                    case 'test-run': return <TestRunScreen setScreen={setScreen} testQuestions={testQuestions} studentName={selectedStudent} setTestScores={setTestScores} refreshData={refreshData} />;
+                    case 'test-run': return <TestRunScreen setScreen={setScreen} testQuestions={testQuestions} studentName={selectedStudent} refreshData={refreshData} />;
                     default: return <HomeScreen setScreen={setScreen} refreshData={refreshData} isLoading={isLoading} />;
                 }
             };
